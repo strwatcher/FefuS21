@@ -1,5 +1,3 @@
-from functools import partial
-
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 import sys
@@ -113,7 +111,8 @@ class FilmsTable(QWidget):
             self.table.setRowCount(self.table.rowCount() + 1)
             for j, element in enumerate(row):
                 if j == GENRE_POSITION:
-                    element = list(self.cursor.execute("""SELECT title FROM genres WHERE id=?""", (element,)).fetchone()).pop()
+                    element = list(
+                        self.cursor.execute("""SELECT title FROM genres WHERE id=?""", (element,)).fetchone()).pop()
 
                 item = QTableWidgetItem(str(element))
                 if j == ID_POSITION:
