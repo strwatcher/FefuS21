@@ -1,8 +1,9 @@
+from functools import partial
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 import sys
 import sqlite3
-from functools import partial
 
 FIELDS = ('Идентификатор', 'Название', 'Год', 'Жанр', 'Продолжительность')
 DB_FIELDS = ('id', 'title', 'year', 'genre', 'duration')
@@ -43,10 +44,11 @@ class TableWidget(QWidget):
         super().__init__()
         self.parent = parent
         self.combobox = QComboBox()
-        self.table = FilmsTable()
+        self.table = FilmsTable(self)
 
         self.save_button = QPushButton("Сохранить")
         self.add_button = QPushButton("Добавить")
+        self.delete_button = QPushButton("Удалить")
         self.setup_ui()
 
     def setup_ui(self):
@@ -56,10 +58,12 @@ class TableWidget(QWidget):
         self.table.setMinimumSize(800, 800)
         self.save_button.clicked.connect(self.table.connection.commit)
         self.add_button.clicked.connect(self.parent.switch_to_form)
+        self.delete_button.clicked.connect(self.table.delete)
         main_layout.addWidget(self.combobox)
         main_layout.addWidget(self.add_button)
         main_layout.addWidget(self.table)
         main_layout.addWidget(self.save_button)
+        main_layout.addWidget(self.delete_button)
         self.setLayout(main_layout)
 
     def chosen_field_catcher(self, text):
@@ -78,11 +82,15 @@ class TableWidget(QWidget):
 
 
 class FilmsTable(QWidget):
-    def __init__(self, db_name='films.db'):
+    def __init__(self, parent, db_name='films.db'):
         super().__init__()
+        self.parent = parent
         self.connection = sqlite3.connect(db_name)
         self.cursor = self.connection.cursor()
         self.table = QTableWidget()
+        self.queue = list()
+        self.field = str()
+        self.value = str()
         self.setup_ui()
 
     def setup_ui(self):
@@ -91,8 +99,10 @@ class FilmsTable(QWidget):
         self.setLayout(layout)
 
     def search_in_table(self, field, value):
+        self.field = field
+        self.value = value
 
-        films = self.make_the_request(field, value)
+        films = list(self.make_the_request(field, value))[0]
 
         if len(films) > 0:
             self.table.setColumnCount(len(films[0]))
@@ -101,18 +111,17 @@ class FilmsTable(QWidget):
         self.table.setRowCount(0)
         for i, row in enumerate(films):
             self.table.setRowCount(self.table.rowCount() + 1)
-            for j, item in enumerate(row):
+            for j, element in enumerate(row):
                 if j == GENRE_POSITION:
-                    item = list(self.cursor
-                                .execute("""SELECT title FROM genres WHERE id=?""", (item,))
-                                .fetchone()) \
-                        .pop()
-                item = QTableWidgetItem(str(item))
+                    element = list(self.cursor.execute("""SELECT title FROM genres WHERE id=?""", (element,)).fetchone()).pop()
+
+                item = QTableWidgetItem(str(element))
                 if j == ID_POSITION:
                     item.setFlags(item.flags() ^ Qt.ItemIsEditable)
                 self.table.setItem(i, j, item)
 
         self.table.itemChanged.connect(self.changes_catcher)
+        self.table.itemClicked.connect(self.add_to_delete_queue)
 
         self.table.resizeColumnsToContents()
 
@@ -131,7 +140,7 @@ class FilmsTable(QWidget):
         if field == 'Название':
             value += '%'
 
-        return self.cursor.execute(relations[field], (value,)).fetchmany(quantity)
+        return self.cursor.execute(relations[field], (value,)).fetchmany(quantity), relations[field], value
 
     def changes_catcher(self, item: QTableWidgetItem):
         film_id = int(self.table.item(item.row(), 0).text())
@@ -144,7 +153,7 @@ class FilmsTable(QWidget):
             try:
                 self.cursor.execute(request, (int(item.text()),))
             except:
-                self.cursor.execute(request, (0, ))
+                self.cursor.execute(request, (0,))
         elif item.column() == 1:
             self.cursor.execute(request, (item.text(),)).fetchone()
         elif item.column() == 3:
@@ -187,6 +196,31 @@ class FilmsTable(QWidget):
         item.setFlags(item.flags() ^ Qt.ItemIsEditable)
 
         self.search_in_table(FIELDS[1], data["title"])
+
+    def add_to_delete_queue(self, item):
+        if item.column() in (2, 4):
+            try:
+                self.queue.append("""DELETE from Films
+                                where {} = {}""".format(DB_FIELDS[item.column()], int(item.text())))
+            except:
+                pass
+
+        elif item.column() == 3:
+            id_of_genre = list(self.cursor.execute("""SELECT id
+                                                 FROM genres
+                                                 WHERE title = ?""", (item.text(),)).fetchone())[0]
+            self.queue.append("""DELETE from Films
+                                where {} = {}""".format(DB_FIELDS[item.column()], id_of_genre))
+        else:
+            self.queue.append("""DELETE from Films 
+                    where {} = {}""".format(DB_FIELDS[item.column()], item.text()))
+
+    def delete(self):
+        for req in self.queue:
+            self.cursor.execute(req)
+        self.queue = list()
+        self.connection.commit()
+        self.search_in_table(self.field, self.value)
 
 
 class NewFilmForm(QWidget):
