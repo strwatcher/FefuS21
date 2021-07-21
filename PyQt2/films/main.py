@@ -197,10 +197,11 @@ class FilmsTable(QWidget):
         self.search_in_table(FIELDS[1], data["title"])
 
     def add_to_delete_queue(self, item):
+        req = ("", "")
         if item.column() in (2, 4):
             try:
-                self.queue.append(("""DELETE from Films
-                                where {} like ?""".format(DB_FIELDS[item.column()]), int(item.text())))
+                req = ("""DELETE from Films
+                                where {} like ?""".format(DB_FIELDS[item.column()]), int(item.text()))
             except:
                 pass
 
@@ -208,11 +209,16 @@ class FilmsTable(QWidget):
             id_of_genre = list(self.cursor.execute("""SELECT id
                                                  FROM genres
                                                  WHERE title = ?""", (item.text(),)).fetchone())[0]
-            self.queue.append(("""DELETE from Films
-                                where {} = ?""".format(DB_FIELDS[item.column()]), id_of_genre))
+            req = ("""DELETE from Films
+                                where {} = ?""".format(DB_FIELDS[item.column()]), id_of_genre)
         else:
-            self.queue.append(("""DELETE from Films 
-                    where {} = ?""".format(DB_FIELDS[item.column()]), item.text()))
+            req = ("""DELETE from Films 
+                    where {} = ?""".format(DB_FIELDS[item.column()]), item.text())
+
+        if req != ("", "") and req not in self.queue:
+            self.queue.append(req)
+        elif req in self.queue:
+            self.queue.remove(req)
 
     def delete(self):
         for req in self.queue:
