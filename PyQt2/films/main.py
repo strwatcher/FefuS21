@@ -185,7 +185,7 @@ class FilmsTable(QWidget):
             id_of_genre = list(id_of_genre)[0]
 
         # another one magic number
-        film_id = list(self.cursor.execute("""SELECT COUNT(*) FROM Films""").fetchone())[0] + 1000
+        film_id = list(self.cursor.execute("""SELECT COUNT(*) FROM Films""").fetchone())[0] + 2000
 
         self.cursor.execute("""INSERT INTO Films(id,title,year,genre,duration) VALUES(?,?,?,?,?)""",
                             (film_id, data["title"], data["year"], id_of_genre, data["duration"]))
@@ -199,8 +199,8 @@ class FilmsTable(QWidget):
     def add_to_delete_queue(self, item):
         if item.column() in (2, 4):
             try:
-                self.queue.append("""DELETE from Films
-                                where {} = {}""".format(DB_FIELDS[item.column()], int(item.text())))
+                self.queue.append(("""DELETE from Films
+                                where {} like ?""".format(DB_FIELDS[item.column()]), int(item.text())))
             except:
                 pass
 
@@ -208,15 +208,16 @@ class FilmsTable(QWidget):
             id_of_genre = list(self.cursor.execute("""SELECT id
                                                  FROM genres
                                                  WHERE title = ?""", (item.text(),)).fetchone())[0]
-            self.queue.append("""DELETE from Films
-                                where {} = {}""".format(DB_FIELDS[item.column()], id_of_genre))
+            self.queue.append(("""DELETE from Films
+                                where {} = ?""".format(DB_FIELDS[item.column()]), id_of_genre))
         else:
-            self.queue.append("""DELETE from Films 
-                    where {} = {}""".format(DB_FIELDS[item.column()], item.text()))
+            self.queue.append(("""DELETE from Films 
+                    where {} = ?""".format(DB_FIELDS[item.column()]), item.text()))
 
     def delete(self):
         for req in self.queue:
-            self.cursor.execute(req)
+            indexed_req = list(req)
+            self.cursor.execute(indexed_req[0], (indexed_req[1], ))
         self.queue = list()
         self.connection.commit()
         self.search_in_table(self.field, self.value)
