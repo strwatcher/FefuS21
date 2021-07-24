@@ -2,11 +2,29 @@ import os
 import pygame
 pygame.init()
 
-display = pygame.display.set_mode(size=(0, 0), flags=pygame.FULLSCREEN)
+tile_width = tile_height = 75
+tile_size = tile_width, tile_height
+
+
+def get_size(filename):
+    filename = "data/" + filename
+    with open(filename, 'r') as level:
+        level_map = [line.strip() for line in level]
+
+    width = max(map(len, level_map))
+    height = len(level_map)
+    return width * tile_width, height * tile_height
+
+
+size = get_size("map.txt")
+display = pygame.display.set_mode(size)
 
 
 def get_index(x, y, level_width):
     return y * level_width + x
+
+
+
 
 
 def load_level(filename):
@@ -43,7 +61,6 @@ tile_images = {
 
 player_sprite = load_image('minotaur.png', -1)
 
-tile_width = tile_height = 100
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 walls_group = pygame.sprite.Group()
@@ -56,7 +73,7 @@ class Tile(pygame.sprite.Sprite):
             super().__init__(tiles_group, all_sprites, walls_group)
         else:
             super().__init__(tiles_group, all_sprites)
-        self.image = pygame.transform.scale(tile_images[tile_type], (100, 100))
+        self.image = pygame.transform.scale(tile_images[tile_type], tile_size)
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.pos = pos_x, pos_y
         self.tile_type = tile_type
@@ -65,7 +82,7 @@ class Tile(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.image = pygame.transform.scale(player_sprite, (100, 100))
+        self.image = pygame.transform.scale(player_sprite, tile_size)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15, tile_height * pos_y + 5)
         self.vision = 1, 0
