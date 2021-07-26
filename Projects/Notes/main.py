@@ -5,9 +5,6 @@ from notes_ui import Ui_main_widget
 import sqlite3
 import sys
 
-SELECTED_NOTE_COLOR = 'rgb(3, 74, 89)'
-UNSELECTED_NOTE_COLOR = 'rgb(10, 70, 83)'
-
 
 class MainWidget(QWidget):
     def __init__(self, db_name="notes.db"):
@@ -29,6 +26,8 @@ class MainWidget(QWidget):
         self.ui.create_note_button.setText("+")
         self.ui.create_note_button.setWhatsThis("0")
         self.ui.create_note_button.clicked.connect(self.open_note)
+        self.ui.menu_button.clicked.connect(self.hide_menu)
+        self.ui.menu_button_layout.setAlignment(Qt.AlignLeft)
 
     def closeEvent(self, a0: QCloseEvent) -> None:
         for key, value in self.opened_notes.items():
@@ -61,8 +60,9 @@ class MainWidget(QWidget):
         if note_id not in self.opened_notes.keys():
             if note_id == 0:
                 note_button = QPushButton()
-                note_widget = Note(note_button)
                 note_button.setWhatsThis("{}".format(self.next_id))
+                note_widget = Note(note_button, note_id=self.next_id)
+                print(self.next_id)
                 self.next_id += 1
                 note_button.clicked.connect(self.open_note)
                 self.ui.notes_list_layout.insertWidget(1, note_button)
@@ -78,7 +78,7 @@ class MainWidget(QWidget):
             self.opened_notes.update({note_widget.id: note_widget})
         else:
             note_widget = self.opened_notes[note_id]
-            note_button = self.ui.notes_list_layout.itemAt(self.next_id - note_id).widget()
+            note_button = self.opened_notes[note_id].note_button
         note_widget.header_view.textChanged.connect(note_widget.note_button_update)
         self.ui.edit_area.setCurrentWidget(note_widget)
 
@@ -88,7 +88,11 @@ class MainWidget(QWidget):
         note_button.setStyleSheet(open("./styles/note_button.css").read() + "\n background: rgb(3, 74, 89);\n"
                                                                             "border: 1px solid rgb(255, 255, 255);}")
 
-    # def sync_with_db(self):
+    def hide_menu(self):
+        if self.ui.notes_list.isHidden():
+            self.ui.notes_list.show()
+        else:
+            self.ui.notes_list.hide()
 
 
 class Note(QWidget):
