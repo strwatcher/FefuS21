@@ -4,14 +4,26 @@ from PyQt5.QtGui import QCloseEvent
 from notes_ui import Ui_main_widget
 from typing import *
 from functools import partial
+import hashlib
 import sqlite3
 import sys
-
-
-NOTES_START_INDEX = 1
+import os
+from os.path import expanduser
+INDEX_WHERE_NOTES_START = 1
 NORMAL_STATE = 1
 DELETED_STATE = 2
 SECURED_STATE = 3
+SHOWED_HEADER_LEN = 20
+HEADER_MAX_LEN = 50
+
+NOTE_ID_INDEX = 0
+NOTE_HEADER_INDEX = 1
+NOTE_BODY_INDEX = 2
+NOTE_STATE_INDEX = 3
+
+APP_ENV = expanduser('~') + '/.NOtes'
+DB_PATH = APP_ENV + '/NOtes.db'
+PASS_FILE_PATH = APP_ENV + '/password.txt'
 
 
 def delete_button_from_list(note_id, buttons_list: List[QPushButton]):
@@ -35,15 +47,21 @@ def clear_layout(layout: QLayout, start_index: int):
         widget.setParent(QWidget())
 
 
+def get_password():
+    password_hash = open("password.txt", 'r').read()
+    if password_hash.strip() == "":
+        return None
+    return password_hash
+
+
 class MainWidget(QWidget):
-    def __init__(self, db_name="notes.db"):
+    def __init__(self):
         super().__init__(flags=Qt.Window)
         self.setWindowState(Qt.WindowMaximized)
 
         self.empty_edit_area = QWidget()
 
-        self.connection = sqlite3.connect(db_name)
-        self.cursor = self.connection.cursor()
+        self.db = DataBase()
 
         self.opened_notes = dict()
         self.notes_buttons_list = list()
@@ -95,17 +113,17 @@ class MainWidget(QWidget):
 
     def read_notes(self, request):
         self.notes_buttons_list.clear()
-        clear_layout(self.ui.notes_list_layout, NOTES_START_INDEX)
-        response = self.cursor.execute(request).fetchall()
+        clear_layout(self.ui.notes_list_layout, INDEX_WHERE_NOTES_START)
+        response = self.db.cursor.execute(request).fetchall()
         for note in response:
             note = list(note)
-            note_button = QPushButton(note[1])
-            note_button.setWhatsThis("{}".format(note[0]))
+            note_button = QPushButton(note[NOTE_HEADER_INDEX])
+            note_button.setWhatsThis("{}".format(note[NOTE_ID_INDEX]))
             note_button.clicked.connect(self.open_note)
-            self.ui.notes_list_layout.insertWidget(NOTES_START_INDEX, note_button)
+            self.ui.notes_list_layout.insertWidget(INDEX_WHERE_NOTES_START, note_button)
             self.notes_buttons_list.append(note_button)
-            if note[0] in self.opened_notes.keys():
-                self.opened_notes[note[0]].note_button = note_button
+            if note[NOTE_ID_INDEX] in self.opened_notes.keys():
+                self.opened_notes[note[NOTE_ID_INDEX]].note_button = note_button
         return response
 
     def read_all_notes(self):
@@ -113,19 +131,19 @@ class MainWidget(QWidget):
         response = self.read_notes(request)
         for note in response:
             note = list(note)
-            if note[0] > self.next_id:
-                self.next_id = note[0]
+            if note[NOTE_ID_INDEX] > self.next_id:
+                self.next_id = note[NOTE_ID_INDEX]
 
         self.next_id += 1
 
     def search_some_notes(self):
-        request = """SELECT * FROM Notes WHERE header like '{}%' AND  state = {}"""\
+        request = """SELECT * FROM Notes WHERE header like '{}%' AND  state = {}""" \
             .format(self.ui.search_line.text(), self.cur_state)
         self.read_notes(request)
 
     def update_notes_list_view(self):
         for note_button in self.notes_buttons_list:
-            self.ui.notes_list_layout.insertWidget(NOTES_START_INDEX, note_button)
+            self.ui.notes_list_layout.insertWidget(INDEX_WHERE_NOTES_START, note_button)
 
     def open_note(self):
         note_id = int(self.sender().whatsThis())
@@ -140,20 +158,20 @@ class MainWidget(QWidget):
 
                 note_widget = Note(note_button, note_id, header)
 
-                self.ui.notes_list_layout.insertWidget(NOTES_START_INDEX, note_button)
+                self.ui.notes_list_layout.insertWidget(INDEX_WHERE_NOTES_START, note_button)
                 self.notes_buttons_list.append(note_button)
-                request = """INSERT INTO Notes(id, header, body, state) Values({}, '{}', '', {})"""\
+                request = """INSERT INTO Notes(id, header, body, state) Values({}, '{}', '', {})""" \
                     .format(note_id, header, self.cur_state)
-                self.cursor.execute(request)
+                self.db.cursor.execute(request)
 
-                self.connection.commit()
+                self.db.connection.commit()
 
             else:
                 request = """SELECT * FROM Notes WHERE id=?"""
-                response = self.cursor.execute(request, (note_id,)).fetchone()
+                response = self.db.cursor.execute(request, (note_id,)).fetchone()
 
                 note_button = search_button(note_id, self.notes_buttons_list)
-                note_widget = Note(note_button, note_id, response[1], response[2])
+                note_widget = Note(note_button, note_id, response[NOTE_HEADER_INDEX], response[NOTE_BODY_INDEX])
 
             note_button.setWhatsThis("{}".format(note_id))
             self.ui.edit_area.addWidget(note_widget)
@@ -196,24 +214,35 @@ class MainWidget(QWidget):
             self.ui.edit_area.setCurrentWidget(self.empty_edit_area)
 
             request = """DELETE from Notes WHERE id = ?"""
-            self.cursor.execute(request, (note_id, ))
-            self.connection.commit()
+            self.db.cursor.execute(request, (note_id,))
+            self.db.connection.commit()
 
             self.read_all_notes()
 
     def move_note_to_some_storage(self, storage_state):
         note_id = self.ui.edit_area.currentWidget().id
         request = """UPDATE Notes SET state = {} WHERE id = {}""".format(storage_state, note_id)
-        self.cursor.execute(request)
-        self.connection.commit()
+        self.db.cursor.execute(request)
+        self.db.connection.commit()
         self.search_some_notes()
         self.ui.edit_area.setCurrentWidget(self.empty_edit_area)
 
     def change_state(self, state):
         if state == SECURED_STATE:
+
+            if not self.db.password:
+                i, ok_pressed = QInputDialog.getText(self, "Придумайте пароль",
+                                                     "Чтобы пользоваться закрытым хранилищем,"
+                                                     " необходимо создать пароль")
+                if ok_pressed:
+                    self.db.password = hashlib.sha1(bytes(i.strip(), encoding='utf-8')).hexdigest()
+                    open(PASS_FILE_PATH, 'w').write(self.db.password)
+                else:
+                    return
+
             i, ok_pressed = QInputDialog.getText(self, "Закрытое храниллище", "Введите пароль")
 
-            if ok_pressed and i.strip() == "1234":
+            if ok_pressed and hashlib.sha1(bytes(i.strip(), encoding='utf-8')).hexdigest() == self.db.password:
                 self.cur_state = state
 
         else:
@@ -221,6 +250,7 @@ class MainWidget(QWidget):
 
         self.ui.stacked_tool_bar.setCurrentWidget(self.tool_bars[self.cur_state])
         self.ui.edit_area.setCurrentWidget(self.empty_edit_area)
+        self.ui.search_line.setText("")
         self.search_some_notes()
 
     def sync_with_db(self):
@@ -229,9 +259,9 @@ class MainWidget(QWidget):
                                  SET header = "{}", body = "{}"
                                  WHERE id = {}""".format(value.header_view.text(), value.body_view.toPlainText(), key)
 
-            self.cursor.execute(request)
+            self.db.cursor.execute(request)
 
-        self.connection.commit()
+        self.db.connection.commit()
 
 
 class Note(QWidget):
@@ -247,7 +277,7 @@ class Note(QWidget):
     def setup_widgets(self, header, text):
         if header == "":
             self.header_view.setPlaceholderText("Header here...")
-            self.header_view.setMaxLength(50)
+            self.header_view.setMaxLength(HEADER_MAX_LEN)
         else:
             self.header_view.setText(header)
 
@@ -262,12 +292,54 @@ class Note(QWidget):
 
     def note_button_update(self):
         try:
-            if len(self.header_view.text()) < 16:
+            if len(self.header_view.text()) < SHOWED_HEADER_LEN:
                 self.note_button.setText(self.header_view.text())
             else:
-                self.note_button.setText(self.header_view.text()[:13] + "...")
+                self.note_button.setText(self.header_view.text()[:SHOWED_HEADER_LEN - 3] + "...")
         except RuntimeError:
             pass
+
+
+def dir_exists():
+    return os.path.exists(APP_ENV)
+
+
+def password_file_exists():
+    return os.path.exists(PASS_FILE_PATH)
+
+
+class DataBase:
+    def __init__(self):
+        self.connection = None
+        self.cursor = None
+
+        if not dir_exists():
+            os.mkdir(APP_ENV)
+
+        self.connection = sqlite3.connect(DB_PATH)
+        self.cursor = self.connection.cursor()
+
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS "Notes"  (
+        "id" INTEGER NOT NULL UNIQUE,
+        "header" TEXT, 
+        "body" TEXT, 
+        "state" INTEGER DEFAULT 1, 
+        PRIMARY KEY("id" AUTOINCREMENT)
+        )""")
+
+        self.connection.commit()
+
+        if not password_file_exists():
+            create_pass_file = open(PASS_FILE_PATH, 'w')
+            create_pass_file.close()
+
+        opened_pass_file = open(PASS_FILE_PATH, 'r')
+        self.password = opened_pass_file.read().strip()
+
+        if self.password == "":
+            self.password = None
+
+        opened_pass_file.close()
 
 
 if __name__ == '__main__':
