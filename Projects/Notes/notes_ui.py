@@ -62,14 +62,39 @@ class Ui_main_widget(object):
 "    border: none;\n"
 "    font-size: 30px;\n"
 "    background: rgb(10, 70, 83);\n"
+"    padding: 30px;\n"
+"    margin: 0;\n"
 "}\n"
 "\n"
-"QPushButton:hover {\n"
-"    color: rgb(237, 51, 59)\n"
+"QPushButton#delete_button:hover {\n"
+"    color: rgb(237, 51, 59);\n"
+"}\n"
+"\n"
+"QPushButton#close_storage_button:hover {\n"
+"    color: rgb(35, 79, 109);\n"
+"}\n"
+"\n"
+"QPushButton#add_to_storage_button {\n"
+"    font-size: 20px;\n"
+"}\n"
+"\n"
+"QPushButton#add_to_storage_button:hover {\n"
+"    color: rgb(7, 8, 56);\n"
+"    font-size: 20px;\n"
 "}")
         self.tool_bar.setObjectName("tool_bar")
         self.tool_bar_layout = QtWidgets.QHBoxLayout(self.tool_bar)
+        self.tool_bar_layout.setSpacing(2)
         self.tool_bar_layout.setObjectName("tool_bar_layout")
+        self.add_to_storage_button = QtWidgets.QPushButton(self.tool_bar)
+        self.add_to_storage_button.setObjectName("add_to_storage_button")
+        self.tool_bar_layout.addWidget(self.add_to_storage_button)
+        self.close_storage_button = QtWidgets.QPushButton(self.tool_bar)
+        self.close_storage_button.setObjectName("close_storage_button")
+        self.tool_bar_layout.addWidget(self.close_storage_button)
+        self.delete_button = QtWidgets.QPushButton(self.tool_bar)
+        self.delete_button.setObjectName("delete_button")
+        self.tool_bar_layout.addWidget(self.delete_button)
         self.main_layout.addWidget(self.tool_bar, 0, 1, 1, 1)
         self.menu_button_wrapper = QtWidgets.QWidget(main_widget)
         self.menu_button_wrapper.setStyleSheet("QWidget {\n"
@@ -94,34 +119,6 @@ class Ui_main_widget(object):
         self.menu_button.setObjectName("menu_button")
         self.menu_button_layout.addWidget(self.menu_button)
         self.main_layout.addWidget(self.menu_button_wrapper, 0, 0, 1, 1)
-        self.edit_area = QtWidgets.QStackedWidget(main_widget)
-        self.edit_area.setStyleSheet("QStackedWidget {\n"
-"    background: rgb(3, 74, 89);\n"
-"}\n"
-"\n"
-"QTextEdit {\n"
-"    border: none;\n"
-"    color: rgb(255, 255, 255);\n"
-"    font-size: 20px;\n"
-"    margin: 20px\n"
-"}\n"
-"\n"
-"QLineEdit {\n"
-"    border: none;\n"
-"    color: rgb(255, 255, 255);\n"
-"    font-size: 30px;\n"
-"    margin: 10px;\n"
-"}\n"
-"\n"
-"")
-        self.edit_area.setObjectName("edit_area")
-        self._ = QtWidgets.QWidget()
-        self._.setObjectName("_")
-        self.edit_area.addWidget(self._)
-        self.__ = QtWidgets.QWidget()
-        self.__.setObjectName("__")
-        self.edit_area.addWidget(self.__)
-        self.main_layout.addWidget(self.edit_area, 1, 1, 1, 1)
         self.scroll_notes_list_area = QtWidgets.QScrollArea(main_widget)
         self.scroll_notes_list_area.setMaximumSize(QtCore.QSize(350, 16777215))
         self.scroll_notes_list_area.setStyleSheet("QScrollArea {\n"
@@ -130,7 +127,7 @@ class Ui_main_widget(object):
         self.scroll_notes_list_area.setWidgetResizable(True)
         self.scroll_notes_list_area.setObjectName("scroll_notes_list_area")
         self.notes_list = QtWidgets.QWidget()
-        self.notes_list.setGeometry(QtCore.QRect(0, 0, 318, 763))
+        self.notes_list.setGeometry(QtCore.QRect(0, 0, 198, 673))
         self.notes_list.setStyleSheet("QWidget#notes_list {\n"
 "    background: rgb(10, 70, 83);\n"
 "    padding-right: 20px;\n"
@@ -183,6 +180,34 @@ class Ui_main_widget(object):
         self.notes_list_layout.addWidget(self.search_widget)
         self.scroll_notes_list_area.setWidget(self.notes_list)
         self.main_layout.addWidget(self.scroll_notes_list_area, 1, 0, 1, 1)
+        self.edit_area = QtWidgets.QStackedWidget(main_widget)
+        self.edit_area.setStyleSheet("QStackedWidget {\n"
+"    background: rgb(3, 74, 89);\n"
+"}\n"
+"\n"
+"QTextEdit {\n"
+"    border: none;\n"
+"    color: rgb(255, 255, 255);\n"
+"    font-size: 20px;\n"
+"    margin: 20px\n"
+"}\n"
+"\n"
+"QLineEdit {\n"
+"    border: none;\n"
+"    color: rgb(255, 255, 255);\n"
+"    font-size: 30px;\n"
+"    margin: 10px;\n"
+"}\n"
+"\n"
+"")
+        self.edit_area.setObjectName("edit_area")
+        self._ = QtWidgets.QWidget()
+        self._.setObjectName("_")
+        self.edit_area.addWidget(self._)
+        self.__ = QtWidgets.QWidget()
+        self.__.setObjectName("__")
+        self.edit_area.addWidget(self.__)
+        self.main_layout.addWidget(self.edit_area, 1, 1, 1, 1)
 
         self.retranslateUi(main_widget)
         QtCore.QMetaObject.connectSlotsByName(main_widget)
@@ -190,7 +215,10 @@ class Ui_main_widget(object):
     def retranslateUi(self, main_widget):
         _translate = QtCore.QCoreApplication.translate
         main_widget.setWindowTitle(_translate("main_widget", "Form"))
+        self.add_to_storage_button.setText(_translate("main_widget", "Добавить в секретное хранилище"))
+        self.close_storage_button.setText(_translate("main_widget", "🗃"))
+        self.delete_button.setText(_translate("main_widget", "🗑"))
         self.menu_button.setText(_translate("main_widget", "☰"))
-        self._.setWhatsThis(_translate("main_widget", "<html><head/><body><p>dasf</p></body></html>"))
         self.search_line.setPlaceholderText(_translate("main_widget", "🔍"))
         self.create_note_button.setText(_translate("main_widget", "+"))
+        self._.setWhatsThis(_translate("main_widget", "<html><head/><body><p>dasf</p></body></html>"))

@@ -3,11 +3,15 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from notes_ui import Ui_main_widget
 from typing import *
+from functools import partial
 import sqlite3
 import sys
 
 
 NOTES_START_INDEX = 1
+NORMAL_STATE = 1
+DELETED_STATE = 2
+SECURED_STATE = 3
 
 
 def delete_button_from_list(note_id, buttons_list: List[QPushButton]):
@@ -43,22 +47,30 @@ class MainWidget(QWidget):
         self.opened_notes = dict()
         self.notes_buttons_list = list()
         self.next_id = 1
+        self.cur_state = NORMAL_STATE
         self.read_all_notes()
         self.show()
 
     def ui_correction(self):
         self.ui.notes_list_layout.setAlignment(Qt.AlignTop)
+
         self.ui.create_note_button.setText("+")
         self.ui.create_note_button.setWhatsThis("0")
         self.ui.create_note_button.clicked.connect(self.open_note)
+
         self.ui.menu_button.clicked.connect(self.hide_menu)
         self.ui.menu_button_layout.setAlignment(Qt.AlignLeft)
+
         empty_edit_area = EmptyEditArea()
         self.ui.edit_area.addWidget(empty_edit_area)
         self.ui.edit_area.setCurrentWidget(empty_edit_area)
-        self.ui.delete_button = QPushButton("🗑")
+
         self.ui.delete_button.clicked.connect(self.delete_note)
-        self.ui.tool_bar_layout.addWidget(self.ui.delete_button, alignment=Qt.AlignRight)
+        switch_to_secured_state = partial(self.change_state, SECURED_STATE)
+        self.ui.close_storage_button.clicked.connect(switch_to_secured_state)
+        self.ui.add_to_storage_button.clicked.connect(self.add_note_to_closed_storage)
+        self.ui.tool_bar_layout.setAlignment(Qt.AlignRight)
+
         self.ui.search_line.setAlignment(Qt.AlignBaseline)
         self.ui.search_line.textChanged.connect(self.search_some_notes)
 
@@ -81,7 +93,7 @@ class MainWidget(QWidget):
         return response
 
     def read_all_notes(self):
-        request = """SELECT * FROM Notes"""
+        request = """SELECT * FROM Notes WHERE state = {}""".format(self.cur_state)
         response = self.read_notes(request)
         for note in response:
             note = list(note)
@@ -91,7 +103,8 @@ class MainWidget(QWidget):
         self.next_id += 1
 
     def search_some_notes(self):
-        request = """SELECT * FROM Notes WHERE header like '{}%'""".format(self.ui.search_line.text())
+        request = """SELECT * FROM Notes WHERE header like '{}%' AND  state = {}"""\
+            .format(self.ui.search_line.text(), self.cur_state)
         self.read_notes(request)
 
     def update_notes_list_view(self):
@@ -172,6 +185,25 @@ class MainWidget(QWidget):
             self.connection.commit()
 
             self.read_all_notes()
+
+    def add_note_to_closed_storage(self):
+        note_id = self.ui.edit_area.currentWidget().id
+        request = """UPDATE Notes SET state = {} WHERE id = {}""".format(SECURED_STATE, note_id)
+        self.cursor.execute(request)
+        self.connection.commit()
+        self.search_some_notes()
+
+    def change_state(self, state):
+        if state == SECURED_STATE:
+            i, ok_pressed = QInputDialog.getText(self, "Закрытое храниллище", "Введите пароль")
+
+            if ok_pressed and i.strip() == "1234":
+                self.cur_state = state
+
+        else:
+            self.cur_state = state
+
+        self.search_some_notes()
 
     def sync_with_db(self):
         for key, value in self.opened_notes.items():
