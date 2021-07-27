@@ -7,7 +7,7 @@ import sqlite3
 import sys
 
 
-NOTES_START_INDEX = 2
+NOTES_START_INDEX = 1
 
 
 def delete_button_from_list(note_id, buttons_list: List[QPushButton]):
@@ -59,19 +59,15 @@ class MainWidget(QWidget):
         self.ui.delete_button = QPushButton("🗑")
         self.ui.delete_button.clicked.connect(self.delete_note)
         self.ui.tool_bar_layout.addWidget(self.ui.delete_button, alignment=Qt.AlignRight)
+        self.ui.search_line.setAlignment(Qt.AlignBaseline)
+        self.ui.search_line.textChanged.connect(self.search_some_notes)
 
     def closeEvent(self, a0: QCloseEvent) -> None:
-        for key, value in self.opened_notes.items():
-            request = """UPDATE Notes
-                         SET header = "{}", body = "{}"
-                         WHERE id = {}""".format(value.header_view.text(), value.body_view.toPlainText(), key)
+        self.sync_with_db()
 
-            self.cursor.execute(request)
-
-        self.connection.commit()
-
-    def read_all_notes(self):
-        request = """SELECT * FROM Notes"""
+    def read_notes(self, request):
+        self.notes_buttons_list.clear()
+        clear_layout(self.ui.notes_list_layout, NOTES_START_INDEX)
         response = self.cursor.execute(request).fetchall()
         for note in response:
             note = list(note)
@@ -80,11 +76,23 @@ class MainWidget(QWidget):
             note_button.clicked.connect(self.open_note)
             self.ui.notes_list_layout.insertWidget(NOTES_START_INDEX, note_button)
             self.notes_buttons_list.append(note_button)
+            if note[0] in self.opened_notes.keys():
+                self.opened_notes[note[0]].note_button = note_button
+        return response
 
+    def read_all_notes(self):
+        request = """SELECT * FROM Notes"""
+        response = self.read_notes(request)
+        for note in response:
+            note = list(note)
             if note[0] > self.next_id:
                 self.next_id = note[0]
 
         self.next_id += 1
+
+    def search_some_notes(self):
+        request = """SELECT * FROM Notes WHERE header like '{}%'""".format(self.ui.search_line.text())
+        self.read_notes(request)
 
     def update_notes_list_view(self):
         for note_button in self.notes_buttons_list:
@@ -97,15 +105,15 @@ class MainWidget(QWidget):
                 note_id = self.next_id
                 self.next_id += 1
 
-                note_button = QPushButton()
+                header = self.ui.search_line.text()
+                note_button = QPushButton(header)
                 note_button.clicked.connect(self.open_note)
 
-                note_widget = Note(note_button, note_id)
+                note_widget = Note(note_button, note_id, header)
 
                 self.ui.notes_list_layout.insertWidget(NOTES_START_INDEX, note_button)
                 self.notes_buttons_list.append(note_button)
-
-                request = """INSERT INTO Notes(id, header, body) Values({}, '', '')""".format(note_id)
+                request = """INSERT INTO Notes(id, header, body) Values({}, '{}', '')""".format(note_id, header)
                 self.cursor.execute(request)
 
                 self.connection.commit()
@@ -115,7 +123,7 @@ class MainWidget(QWidget):
                 response = self.cursor.execute(request, (note_id,)).fetchone()
 
                 note_button = search_button(note_id, self.notes_buttons_list)
-                note_widget = Note(note_button, note_id, response[1], response[2], True)
+                note_widget = Note(note_button, note_id, response[1], response[2])
 
             note_button.setWhatsThis("{}".format(note_id))
             self.ui.edit_area.addWidget(note_widget)
@@ -125,6 +133,8 @@ class MainWidget(QWidget):
             note_button = search_button(note_id, self.notes_buttons_list)
 
         note_widget.header_view.textChanged.connect(note_widget.note_button_update)
+        note_widget.header_view.textChanged.connect(self.sync_with_db)
+        note_widget.body_view.textChanged.connect(self.sync_with_db)
         self.ui.edit_area.setCurrentWidget(note_widget)
 
         for button in self.notes_buttons_list:
@@ -153,7 +163,6 @@ class MainWidget(QWidget):
 
         if QMessageBox.Yes == yes_no_dialog.exec():
             self.opened_notes.pop(note_id)
-            clear_layout(self.ui.notes_list_layout, NOTES_START_INDEX)
             empty_edit_area = EmptyEditArea()
             self.ui.edit_area.addWidget(empty_edit_area)
             self.ui.edit_area.setCurrentWidget(empty_edit_area)
@@ -162,21 +171,27 @@ class MainWidget(QWidget):
             self.cursor.execute(request, (note_id, ))
             self.connection.commit()
 
-            self.notes_buttons_list.clear()
             self.read_all_notes()
-            print(self.notes_buttons_list)
+
+    def sync_with_db(self):
+        for key, value in self.opened_notes.items():
+            request = """UPDATE Notes
+                                 SET header = "{}", body = "{}"
+                                 WHERE id = {}""".format(value.header_view.text(), value.body_view.toPlainText(), key)
+
+            self.cursor.execute(request)
+
+        self.connection.commit()
 
 
 class Note(QWidget):
-    def __init__(self, note_button: QPushButton, note_id=0, header="", text="", update=False):
+    def __init__(self, note_button: QPushButton, note_id=0, header="", text=""):
         super().__init__()
         self.header_view = QLineEdit()
         self.body_view = QTextEdit()
         self.layout = QVBoxLayout()
         self.id = note_id
-        self.update = update
         self.note_button = note_button
-
         self.setup_widgets(header, text)
 
     def setup_widgets(self, header, text):
@@ -196,10 +211,13 @@ class Note(QWidget):
         self.setLayout(self.layout)
 
     def note_button_update(self):
-        if len(self.header_view.text()) < 16:
-            self.note_button.setText(self.header_view.text())
-        else:
-            self.note_button.setText(self.header_view.text()[:13] + "...")
+        try:
+            if len(self.header_view.text()) < 16:
+                self.note_button.setText(self.header_view.text())
+            else:
+                self.note_button.setText(self.header_view.text()[:13] + "...")
+        except RuntimeError:
+            pass
 
 
 class EmptyEditArea(QWidget):

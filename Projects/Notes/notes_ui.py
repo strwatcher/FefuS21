@@ -94,39 +94,6 @@ class Ui_main_widget(object):
         self.menu_button.setObjectName("menu_button")
         self.menu_button_layout.addWidget(self.menu_button)
         self.main_layout.addWidget(self.menu_button_wrapper, 0, 0, 1, 1)
-        self.scroll_notes_list_area = QtWidgets.QScrollArea(main_widget)
-        self.scroll_notes_list_area.setMaximumSize(QtCore.QSize(250, 16777215))
-        self.scroll_notes_list_area.setStyleSheet("QScrollArea {\n"
-"    border: none;\n"
-"}")
-        self.scroll_notes_list_area.setWidgetResizable(True)
-        self.scroll_notes_list_area.setObjectName("scroll_notes_list_area")
-        self.notes_list = QtWidgets.QWidget()
-        self.notes_list.setGeometry(QtCore.QRect(0, 0, 250, 763))
-        self.notes_list.setStyleSheet("QWidget#notes_list {\n"
-"    background: rgb(10, 70, 83);\n"
-"    padding-right: 20px;\n"
-"}\n"
-"\n"
-"QPushButton {\n"
-"    border: none;\n"
-"    border-bottom: 1px solid rgb(4, 29, 38);    \n"
-"    color: rgb(255, 255, 255);\n"
-"    background: rgb(10, 70, 83);\n"
-"    padding: 15px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    border: 1px solid rgb(255, 255, 255);\n"
-"}")
-        self.notes_list.setObjectName("notes_list")
-        self.notes_list_layout = QtWidgets.QVBoxLayout(self.notes_list)
-        self.notes_list_layout.setObjectName("notes_list_layout")
-        self.create_note_button = QtWidgets.QPushButton(self.notes_list)
-        self.create_note_button.setObjectName("create_note_button")
-        self.notes_list_layout.addWidget(self.create_note_button)
-        self.scroll_notes_list_area.setWidget(self.notes_list)
-        self.main_layout.addWidget(self.scroll_notes_list_area, 1, 0, 1, 1)
         self.edit_area = QtWidgets.QStackedWidget(main_widget)
         self.edit_area.setStyleSheet("QStackedWidget {\n"
 "    background: rgb(3, 74, 89);\n"
@@ -155,6 +122,67 @@ class Ui_main_widget(object):
         self.__.setObjectName("__")
         self.edit_area.addWidget(self.__)
         self.main_layout.addWidget(self.edit_area, 1, 1, 1, 1)
+        self.scroll_notes_list_area = QtWidgets.QScrollArea(main_widget)
+        self.scroll_notes_list_area.setMaximumSize(QtCore.QSize(350, 16777215))
+        self.scroll_notes_list_area.setStyleSheet("QScrollArea {\n"
+"    border: none;\n"
+"}")
+        self.scroll_notes_list_area.setWidgetResizable(True)
+        self.scroll_notes_list_area.setObjectName("scroll_notes_list_area")
+        self.notes_list = QtWidgets.QWidget()
+        self.notes_list.setGeometry(QtCore.QRect(0, 0, 318, 763))
+        self.notes_list.setStyleSheet("QWidget#notes_list {\n"
+"    background: rgb(10, 70, 83);\n"
+"    padding-right: 20px;\n"
+"}\n"
+"\n"
+"QPushButton {\n"
+"    border: none;\n"
+"    border-bottom: 1px solid rgb(4, 29, 38);    \n"
+"    color: rgb(255, 255, 255);\n"
+"    background: rgb(10, 70, 83);\n"
+"    padding: 15px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    border: 1px solid rgb(255, 255, 255);\n"
+"}")
+        self.notes_list.setObjectName("notes_list")
+        self.notes_list_layout = QtWidgets.QVBoxLayout(self.notes_list)
+        self.notes_list_layout.setObjectName("notes_list_layout")
+        self.search_widget = QtWidgets.QWidget(self.notes_list)
+        self.search_widget.setStyleSheet("QWidget {\n"
+"    background: rgb(10, 70, 83);\n"
+"}\n"
+"\n"
+"QPushButton {\n"
+"    border: none;\n"
+"    margin: 10px;        \n"
+"    font-size: 30px;\n"
+"}\n"
+"\n"
+"QLineEdit {\n"
+"    color: rgb(255, 255, 255);\n"
+"    font-size: 30px;\n"
+"}")
+        self.search_widget.setObjectName("search_widget")
+        self.search_layout = QtWidgets.QHBoxLayout(self.search_widget)
+        self.search_layout.setSpacing(0)
+        self.search_layout.setObjectName("search_layout")
+        self.search_line = QtWidgets.QLineEdit(self.search_widget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.search_line.sizePolicy().hasHeightForWidth())
+        self.search_line.setSizePolicy(sizePolicy)
+        self.search_line.setObjectName("search_line")
+        self.search_layout.addWidget(self.search_line)
+        self.create_note_button = QtWidgets.QPushButton(self.search_widget)
+        self.create_note_button.setObjectName("create_note_button")
+        self.search_layout.addWidget(self.create_note_button)
+        self.notes_list_layout.addWidget(self.search_widget)
+        self.scroll_notes_list_area.setWidget(self.notes_list)
+        self.main_layout.addWidget(self.scroll_notes_list_area, 1, 0, 1, 1)
 
         self.retranslateUi(main_widget)
         QtCore.QMetaObject.connectSlotsByName(main_widget)
@@ -163,5 +191,6 @@ class Ui_main_widget(object):
         _translate = QtCore.QCoreApplication.translate
         main_widget.setWindowTitle(_translate("main_widget", "Form"))
         self.menu_button.setText(_translate("main_widget", "☰"))
-        self.create_note_button.setText(_translate("main_widget", "PushButton"))
         self._.setWhatsThis(_translate("main_widget", "<html><head/><body><p>dasf</p></body></html>"))
+        self.search_line.setPlaceholderText(_translate("main_widget", "🔍"))
+        self.create_note_button.setText(_translate("main_widget", "+"))
