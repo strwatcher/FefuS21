@@ -39,15 +39,23 @@ class MainWidget(QWidget):
     def __init__(self, db_name="notes.db"):
         super().__init__(flags=Qt.Window)
         self.setWindowState(Qt.WindowMaximized)
-        self.ui = Ui_main_widget()
-        self.ui.setupUi(self)
-        self.ui_correction()
+
+        self.empty_edit_area = QWidget()
+
         self.connection = sqlite3.connect(db_name)
         self.cursor = self.connection.cursor()
+
         self.opened_notes = dict()
         self.notes_buttons_list = list()
         self.next_id = 1
+
+        self.ui = Ui_main_widget()
+        self.ui.setupUi(self)
+        self.ui_correction()
+
         self.cur_state = NORMAL_STATE
+        self.tool_bars = {NORMAL_STATE: self.ui.normal_tool_bar, SECURED_STATE: self.ui.secured_tool_bar}
+
         self.read_all_notes()
         self.show()
 
@@ -61,15 +69,23 @@ class MainWidget(QWidget):
         self.ui.menu_button.clicked.connect(self.hide_menu)
         self.ui.menu_button_layout.setAlignment(Qt.AlignLeft)
 
-        empty_edit_area = EmptyEditArea()
-        self.ui.edit_area.addWidget(empty_edit_area)
-        self.ui.edit_area.setCurrentWidget(empty_edit_area)
+        self.ui.edit_area.addWidget(self.empty_edit_area)
+        self.ui.edit_area.setCurrentWidget(self.empty_edit_area)
 
         self.ui.delete_button.clicked.connect(self.delete_note)
         switch_to_secured_state = partial(self.change_state, SECURED_STATE)
-        self.ui.close_storage_button.clicked.connect(switch_to_secured_state)
-        self.ui.add_to_storage_button.clicked.connect(self.add_note_to_closed_storage)
-        self.ui.tool_bar_layout.setAlignment(Qt.AlignRight)
+        self.ui.closed_storage_button.clicked.connect(switch_to_secured_state)
+        move_note_to_closed_storage = partial(self.move_note_to_some_storage, SECURED_STATE)
+        self.ui.add_to_closed_button.clicked.connect(move_note_to_closed_storage)
+        self.ui.normal_tool_bar_layout.setAlignment(Qt.AlignRight)
+
+        self.ui.delete_button_2.clicked.connect(self.delete_note)
+        switch_to_default_state = partial(self.change_state, NORMAL_STATE)
+        move_note_to_default_storage = partial(self.move_note_to_some_storage, NORMAL_STATE)
+        self.ui.remove_from_closed_button.clicked.connect(move_note_to_default_storage)
+        self.ui.default_storage_button.clicked.connect(switch_to_default_state)
+        self.ui.secured_tool_bar_layout.setAlignment(Qt.AlignRight)
+        self.ui.stacked_tool_bar.setCurrentWidget(self.ui.normal_tool_bar)
 
         self.ui.search_line.setAlignment(Qt.AlignBaseline)
         self.ui.search_line.textChanged.connect(self.search_some_notes)
@@ -126,7 +142,8 @@ class MainWidget(QWidget):
 
                 self.ui.notes_list_layout.insertWidget(NOTES_START_INDEX, note_button)
                 self.notes_buttons_list.append(note_button)
-                request = """INSERT INTO Notes(id, header, body) Values({}, '{}', '')""".format(note_id, header)
+                request = """INSERT INTO Notes(id, header, body, state) Values({}, '{}', '', {})"""\
+                    .format(note_id, header, self.cur_state)
                 self.cursor.execute(request)
 
                 self.connection.commit()
@@ -176,9 +193,7 @@ class MainWidget(QWidget):
 
         if QMessageBox.Yes == yes_no_dialog.exec():
             self.opened_notes.pop(note_id)
-            empty_edit_area = EmptyEditArea()
-            self.ui.edit_area.addWidget(empty_edit_area)
-            self.ui.edit_area.setCurrentWidget(empty_edit_area)
+            self.ui.edit_area.setCurrentWidget(self.empty_edit_area)
 
             request = """DELETE from Notes WHERE id = ?"""
             self.cursor.execute(request, (note_id, ))
@@ -186,12 +201,13 @@ class MainWidget(QWidget):
 
             self.read_all_notes()
 
-    def add_note_to_closed_storage(self):
+    def move_note_to_some_storage(self, storage_state):
         note_id = self.ui.edit_area.currentWidget().id
-        request = """UPDATE Notes SET state = {} WHERE id = {}""".format(SECURED_STATE, note_id)
+        request = """UPDATE Notes SET state = {} WHERE id = {}""".format(storage_state, note_id)
         self.cursor.execute(request)
         self.connection.commit()
         self.search_some_notes()
+        self.ui.edit_area.setCurrentWidget(self.empty_edit_area)
 
     def change_state(self, state):
         if state == SECURED_STATE:
@@ -203,6 +219,8 @@ class MainWidget(QWidget):
         else:
             self.cur_state = state
 
+        self.ui.stacked_tool_bar.setCurrentWidget(self.tool_bars[self.cur_state])
+        self.ui.edit_area.setCurrentWidget(self.empty_edit_area)
         self.search_some_notes()
 
     def sync_with_db(self):
@@ -250,14 +268,6 @@ class Note(QWidget):
                 self.note_button.setText(self.header_view.text()[:13] + "...")
         except RuntimeError:
             pass
-
-
-class EmptyEditArea(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.label = QLabel("Создайте новую заметку или откройте старую")
-        self.label.setStyleSheet("color: rgb(255, 255, 255);\nfont-size: 30px;")
-        self.id = -1
 
 
 if __name__ == '__main__':

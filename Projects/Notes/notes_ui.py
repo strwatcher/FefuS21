@@ -52,73 +52,6 @@ class Ui_main_widget(object):
         self.main_layout = QtWidgets.QGridLayout(main_widget)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
         self.main_layout.setObjectName("main_layout")
-        self.tool_bar = QtWidgets.QWidget(main_widget)
-        self.tool_bar.setStyleSheet("QWidget {\n"
-"    background: rgb(10, 70, 83);\n"
-"}\n"
-"\n"
-"QPushButton {\n"
-"    color: rgb(94, 92, 100);\n"
-"    border: none;\n"
-"    font-size: 30px;\n"
-"    background: rgb(10, 70, 83);\n"
-"    padding: 30px;\n"
-"    margin: 0;\n"
-"}\n"
-"\n"
-"QPushButton#delete_button:hover {\n"
-"    color: rgb(237, 51, 59);\n"
-"}\n"
-"\n"
-"QPushButton#close_storage_button:hover {\n"
-"    color: rgb(35, 79, 109);\n"
-"}\n"
-"\n"
-"QPushButton#add_to_storage_button {\n"
-"    font-size: 20px;\n"
-"}\n"
-"\n"
-"QPushButton#add_to_storage_button:hover {\n"
-"    color: rgb(7, 8, 56);\n"
-"    font-size: 20px;\n"
-"}")
-        self.tool_bar.setObjectName("tool_bar")
-        self.tool_bar_layout = QtWidgets.QHBoxLayout(self.tool_bar)
-        self.tool_bar_layout.setSpacing(2)
-        self.tool_bar_layout.setObjectName("tool_bar_layout")
-        self.add_to_storage_button = QtWidgets.QPushButton(self.tool_bar)
-        self.add_to_storage_button.setObjectName("add_to_storage_button")
-        self.tool_bar_layout.addWidget(self.add_to_storage_button)
-        self.close_storage_button = QtWidgets.QPushButton(self.tool_bar)
-        self.close_storage_button.setObjectName("close_storage_button")
-        self.tool_bar_layout.addWidget(self.close_storage_button)
-        self.delete_button = QtWidgets.QPushButton(self.tool_bar)
-        self.delete_button.setObjectName("delete_button")
-        self.tool_bar_layout.addWidget(self.delete_button)
-        self.main_layout.addWidget(self.tool_bar, 0, 1, 1, 1)
-        self.menu_button_wrapper = QtWidgets.QWidget(main_widget)
-        self.menu_button_wrapper.setStyleSheet("QWidget {\n"
-"    background: rgb(10, 70, 83);\n"
-"}")
-        self.menu_button_wrapper.setObjectName("menu_button_wrapper")
-        self.menu_button_layout = QtWidgets.QHBoxLayout(self.menu_button_wrapper)
-        self.menu_button_layout.setContentsMargins(9, 9, 9, 9)
-        self.menu_button_layout.setSpacing(0)
-        self.menu_button_layout.setObjectName("menu_button_layout")
-        self.menu_button = QtWidgets.QPushButton(self.menu_button_wrapper)
-        self.menu_button.setStyleSheet("QPushButton {\n"
-"    border: none;\n"
-"    color: rgb(154, 153, 150);\n"
-"    font-size: 30px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    color: rgb(255, 255, 255)\n"
-"}")
-        self.menu_button.setFlat(False)
-        self.menu_button.setObjectName("menu_button")
-        self.menu_button_layout.addWidget(self.menu_button)
-        self.main_layout.addWidget(self.menu_button_wrapper, 0, 0, 1, 1)
         self.scroll_notes_list_area = QtWidgets.QScrollArea(main_widget)
         self.scroll_notes_list_area.setMaximumSize(QtCore.QSize(350, 16777215))
         self.scroll_notes_list_area.setStyleSheet("QScrollArea {\n"
@@ -127,7 +60,7 @@ class Ui_main_widget(object):
         self.scroll_notes_list_area.setWidgetResizable(True)
         self.scroll_notes_list_area.setObjectName("scroll_notes_list_area")
         self.notes_list = QtWidgets.QWidget()
-        self.notes_list.setGeometry(QtCore.QRect(0, 0, 198, 673))
+        self.notes_list.setGeometry(QtCore.QRect(0, 0, 198, 653))
         self.notes_list.setStyleSheet("QWidget#notes_list {\n"
 "    background: rgb(10, 70, 83);\n"
 "    padding-right: 20px;\n"
@@ -180,6 +113,92 @@ class Ui_main_widget(object):
         self.notes_list_layout.addWidget(self.search_widget)
         self.scroll_notes_list_area.setWidget(self.notes_list)
         self.main_layout.addWidget(self.scroll_notes_list_area, 1, 0, 1, 1)
+        self.menu_button_wrapper = QtWidgets.QWidget(main_widget)
+        self.menu_button_wrapper.setStyleSheet("QWidget {\n"
+"    background: rgb(10, 70, 83);\n"
+"}")
+        self.menu_button_wrapper.setObjectName("menu_button_wrapper")
+        self.menu_button_layout = QtWidgets.QHBoxLayout(self.menu_button_wrapper)
+        self.menu_button_layout.setContentsMargins(9, 9, 9, 9)
+        self.menu_button_layout.setSpacing(0)
+        self.menu_button_layout.setObjectName("menu_button_layout")
+        self.menu_button = QtWidgets.QPushButton(self.menu_button_wrapper)
+        self.menu_button.setStyleSheet("QPushButton {\n"
+"    border: none;\n"
+"    color: rgb(154, 153, 150);\n"
+"    font-size: 30px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    color: rgb(255, 255, 255)\n"
+"}")
+        self.menu_button.setFlat(False)
+        self.menu_button.setObjectName("menu_button")
+        self.menu_button_layout.addWidget(self.menu_button)
+        self.main_layout.addWidget(self.menu_button_wrapper, 0, 0, 1, 1)
+        self.stacked_tool_bar = QtWidgets.QStackedWidget(main_widget)
+        self.stacked_tool_bar.setMaximumSize(QtCore.QSize(16777215, 150))
+        self.stacked_tool_bar.setStyleSheet("QWidget {\n"
+"    background: rgb(10, 70, 83);\n"
+"}\n"
+"\n"
+"QPushButton {\n"
+"    color: rgb(94, 92, 100);\n"
+"    border: none;\n"
+"    font-size: 30px;\n"
+"    background: rgb(10, 70, 83);\n"
+"    padding: 30px;\n"
+"    margin: 0;\n"
+"}\n"
+"\n"
+"QPushButton#delete_button:hover, QPushButton#delete_button_2:hover {\n"
+"    color: rgb(237, 51, 59);\n"
+"}\n"
+"\n"
+"QPushButton#closed_storage_button:hover, QPushButton#default_storage_button:hover {\n"
+"    color: rgb(7, 8, 56);\n"
+"    font-size: 20px;\n"
+"}\n"
+"\n"
+"QPushButton#closed_storage_button, QPushButton#default_storage_button {\n"
+"    font-size: 20px;\n"
+"}\n"
+"\n"
+"QPushButton#add_to_storage_button:hover, QPushButton#remove_from_closed_button:hover {\n"
+"    color: rgb(35, 79, 109);\n"
+"    \n"
+"}")
+        self.stacked_tool_bar.setObjectName("stacked_tool_bar")
+        self.normal_tool_bar = QtWidgets.QWidget()
+        self.normal_tool_bar.setObjectName("normal_tool_bar")
+        self.normal_tool_bar_layout = QtWidgets.QHBoxLayout(self.normal_tool_bar)
+        self.normal_tool_bar_layout.setSpacing(2)
+        self.normal_tool_bar_layout.setObjectName("normal_tool_bar_layout")
+        self.closed_storage_button = QtWidgets.QPushButton(self.normal_tool_bar)
+        self.closed_storage_button.setObjectName("closed_storage_button")
+        self.normal_tool_bar_layout.addWidget(self.closed_storage_button)
+        self.add_to_closed_button = QtWidgets.QPushButton(self.normal_tool_bar)
+        self.add_to_closed_button.setObjectName("add_to_closed_button")
+        self.normal_tool_bar_layout.addWidget(self.add_to_closed_button)
+        self.delete_button = QtWidgets.QPushButton(self.normal_tool_bar)
+        self.delete_button.setObjectName("delete_button")
+        self.normal_tool_bar_layout.addWidget(self.delete_button)
+        self.stacked_tool_bar.addWidget(self.normal_tool_bar)
+        self.secured_tool_bar = QtWidgets.QWidget()
+        self.secured_tool_bar.setObjectName("secured_tool_bar")
+        self.secured_tool_bar_layout = QtWidgets.QHBoxLayout(self.secured_tool_bar)
+        self.secured_tool_bar_layout.setObjectName("secured_tool_bar_layout")
+        self.default_storage_button = QtWidgets.QPushButton(self.secured_tool_bar)
+        self.default_storage_button.setObjectName("default_storage_button")
+        self.secured_tool_bar_layout.addWidget(self.default_storage_button)
+        self.remove_from_closed_button = QtWidgets.QPushButton(self.secured_tool_bar)
+        self.remove_from_closed_button.setObjectName("remove_from_closed_button")
+        self.secured_tool_bar_layout.addWidget(self.remove_from_closed_button)
+        self.delete_button_2 = QtWidgets.QPushButton(self.secured_tool_bar)
+        self.delete_button_2.setObjectName("delete_button_2")
+        self.secured_tool_bar_layout.addWidget(self.delete_button_2)
+        self.stacked_tool_bar.addWidget(self.secured_tool_bar)
+        self.main_layout.addWidget(self.stacked_tool_bar, 0, 1, 1, 1)
         self.edit_area = QtWidgets.QStackedWidget(main_widget)
         self.edit_area.setStyleSheet("QStackedWidget {\n"
 "    background: rgb(3, 74, 89);\n"
@@ -204,21 +223,22 @@ class Ui_main_widget(object):
         self._ = QtWidgets.QWidget()
         self._.setObjectName("_")
         self.edit_area.addWidget(self._)
-        self.__ = QtWidgets.QWidget()
-        self.__.setObjectName("__")
-        self.edit_area.addWidget(self.__)
         self.main_layout.addWidget(self.edit_area, 1, 1, 1, 1)
 
         self.retranslateUi(main_widget)
+        self.stacked_tool_bar.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(main_widget)
 
     def retranslateUi(self, main_widget):
         _translate = QtCore.QCoreApplication.translate
         main_widget.setWindowTitle(_translate("main_widget", "Form"))
-        self.add_to_storage_button.setText(_translate("main_widget", "Добавить в секретное хранилище"))
-        self.close_storage_button.setText(_translate("main_widget", "🗃"))
-        self.delete_button.setText(_translate("main_widget", "🗑"))
-        self.menu_button.setText(_translate("main_widget", "☰"))
         self.search_line.setPlaceholderText(_translate("main_widget", "🔍"))
         self.create_note_button.setText(_translate("main_widget", "+"))
+        self.menu_button.setText(_translate("main_widget", "☰"))
+        self.closed_storage_button.setText(_translate("main_widget", "Закрытое хранилище"))
+        self.add_to_closed_button.setText(_translate("main_widget", "🔒"))
+        self.delete_button.setText(_translate("main_widget", "🗑"))
+        self.default_storage_button.setText(_translate("main_widget", "Обычные заметки"))
+        self.remove_from_closed_button.setText(_translate("main_widget", "🔓"))
+        self.delete_button_2.setText(_translate("main_widget", "🗑"))
         self._.setWhatsThis(_translate("main_widget", "<html><head/><body><p>dasf</p></body></html>"))
