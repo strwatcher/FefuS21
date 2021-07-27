@@ -60,7 +60,7 @@ class Ui_main_widget(object):
         self.scroll_notes_list_area.setWidgetResizable(True)
         self.scroll_notes_list_area.setObjectName("scroll_notes_list_area")
         self.notes_list = QtWidgets.QWidget()
-        self.notes_list.setGeometry(QtCore.QRect(0, 0, 198, 653))
+        self.notes_list.setGeometry(QtCore.QRect(0, 0, 214, 653))
         self.notes_list.setStyleSheet("QWidget#notes_list {\n"
 "    background: rgb(10, 70, 83);\n"
 "    padding-right: 20px;\n"
@@ -113,6 +113,7 @@ class Ui_main_widget(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.search_line.sizePolicy().hasHeightForWidth())
         self.search_line.setSizePolicy(sizePolicy)
+        self.search_line.setText("")
         self.search_line.setObjectName("search_line")
         self.search_layout.addWidget(self.search_line)
         self.create_note_button = QtWidgets.QPushButton(self.search_widget)
@@ -157,6 +158,10 @@ class Ui_main_widget(object):
 "    background: rgb(10, 70, 83);\n"
 "    padding: 30px;\n"
 "    margin: 0;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    font-size: 36px;\n"
 "}\n"
 "\n"
 "QPushButton#delete_button:hover, QPushButton#delete_button_2:hover {\n"
@@ -240,7 +245,7 @@ class Ui_main_widget(object):
     def retranslateUi(self, main_widget):
         _translate = QtCore.QCoreApplication.translate
         main_widget.setWindowTitle(_translate("main_widget", "NOtes"))
-        self.search_line.setPlaceholderText(_translate("main_widget", "🔍"))
+        self.search_line.setPlaceholderText(_translate("main_widget", "..."))
         self.create_note_button.setText(_translate("main_widget", "+"))
         self.menu_button.setText(_translate("main_widget", "☰"))
         self.closed_storage_button.setText(_translate("main_widget", "Закрытое хранилище"))

@@ -103,7 +103,7 @@ class MainWidget(QWidget):
 
         self.opened_notes = dict()
         self.notes_buttons_list = list()
-        self.next_id = 1
+        self.next_id = self.take_next_id()
 
         self.ui = Ui_main_widget()
         self.ui.setupUi(self)
@@ -112,7 +112,7 @@ class MainWidget(QWidget):
         self.cur_state = NORMAL_STATE
         self.tool_bars = {NORMAL_STATE: self.ui.normal_tool_bar, SECURED_STATE: self.ui.secured_tool_bar}
 
-        self.read_all_notes()
+        self.search_some_notes()
         self.show()
 
     def ui_correction(self):
@@ -164,15 +164,10 @@ class MainWidget(QWidget):
                 self.opened_notes[note[NOTE_ID_INDEX]].note_button = note_button
         return response
 
-    def read_all_notes(self):
-        request = """SELECT * FROM Notes WHERE state = {}""".format(self.cur_state)
-        response = self.read_notes(request)
-        for note in response:
-            note = list(note)
-            if note[NOTE_ID_INDEX] > self.next_id:
-                self.next_id = note[NOTE_ID_INDEX]
-
-        self.next_id += 1
+    def take_next_id(self):
+        request = """SELECT MAX(id) FROM Notes"""
+        response = self.db.cursor.execute(request).fetchone()
+        return response[0] + 1
 
     def search_some_notes(self):
         request = """SELECT * FROM Notes WHERE header like '{}%' AND  state = {}""" \
@@ -255,7 +250,7 @@ class MainWidget(QWidget):
             self.db.cursor.execute(request, (note_id,))
             self.db.connection.commit()
 
-            self.read_all_notes()
+            self.search_some_notes()
 
     def move_note_to_some_storage(self, storage_state):
         note_id = self.ui.edit_area.currentWidget().id
