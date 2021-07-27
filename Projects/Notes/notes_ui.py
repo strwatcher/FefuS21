@@ -76,6 +76,14 @@ class Ui_main_widget(object):
 "\n"
 "QPushButton:hover {\n"
 "    border: 1px solid rgb(255, 255, 255);\n"
+"}\n"
+"\n"
+"QPushButton#create_note_button {\n"
+"    color: rgb(154, 153, 150);\n"
+"}\n"
+"\n"
+"QPushButton#create_note_button:hover {\n"
+"    color: rgb(255, 255, 255);\n"
 "}")
         self.notes_list.setObjectName("notes_list")
         self.notes_list_layout = QtWidgets.QVBoxLayout(self.notes_list)
@@ -143,7 +151,7 @@ class Ui_main_widget(object):
 "}\n"
 "\n"
 "QPushButton {\n"
-"    color: rgb(94, 92, 100);\n"
+"    color: rgb(154, 153, 150);\n"
 "    border: none;\n"
 "    font-size: 30px;\n"
 "    background: rgb(10, 70, 83);\n"
@@ -156,7 +164,7 @@ class Ui_main_widget(object):
 "}\n"
 "\n"
 "QPushButton#closed_storage_button:hover, QPushButton#default_storage_button:hover {\n"
-"    color: rgb(7, 8, 56);\n"
+"    color: rgb(255, 255, 255);\n"
 "    font-size: 20px;\n"
 "}\n"
 "\n"
@@ -164,8 +172,8 @@ class Ui_main_widget(object):
 "    font-size: 20px;\n"
 "}\n"
 "\n"
-"QPushButton#add_to_storage_button:hover, QPushButton#remove_from_closed_button:hover {\n"
-"    color: rgb(35, 79, 109);\n"
+"QPushButton#add_to_closed_button:hover, QPushButton#remove_from_closed_button:hover {\n"
+"    color: rgb(23, 33, 48);\n"
 "    \n"
 "}")
         self.stacked_tool_bar.setObjectName("stacked_tool_bar")
@@ -226,12 +234,12 @@ class Ui_main_widget(object):
         self.main_layout.addWidget(self.edit_area, 1, 1, 1, 1)
 
         self.retranslateUi(main_widget)
-        self.stacked_tool_bar.setCurrentIndex(1)
+        self.stacked_tool_bar.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(main_widget)
 
     def retranslateUi(self, main_widget):
         _translate = QtCore.QCoreApplication.translate
-        main_widget.setWindowTitle(_translate("main_widget", "Form"))
+        main_widget.setWindowTitle(_translate("main_widget", "NOtes"))
         self.search_line.setPlaceholderText(_translate("main_widget", "🔍"))
         self.create_note_button.setText(_translate("main_widget", "+"))
         self.menu_button.setText(_translate("main_widget", "☰"))

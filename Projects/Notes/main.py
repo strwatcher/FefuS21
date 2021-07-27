@@ -9,6 +9,7 @@ import sqlite3
 import sys
 import os
 from os.path import expanduser
+
 INDEX_WHERE_NOTES_START = 1
 NORMAL_STATE = 1
 DELETED_STATE = 2
@@ -21,9 +22,45 @@ NOTE_HEADER_INDEX = 1
 NOTE_BODY_INDEX = 2
 NOTE_STATE_INDEX = 3
 
-APP_ENV = expanduser('~') + '/.NOtes'
-DB_PATH = APP_ENV + '/NOtes.db'
-PASS_FILE_PATH = APP_ENV + '/password.txt'
+APP_ENV = os.path.join(expanduser('~'), '.NOtes')
+DB_PATH = os.path.join(APP_ENV, 'NOtes.db')
+PASS_FILE_PATH = os.path.join(APP_ENV, 'password.txt')
+
+NOTE_BUTTON_STYLE = "\
+QPushButton:hover {\
+    border: 1px solid rgb(255, 255, 255);\
+}\
+\
+QPushButton {\
+    border-bottom: 1px solid rgb(4, 29, 38);\
+color: rgb(255, 255, 255);\
+background: rgb(10, 70, 83);\
+padding: 15px;\
+"
+
+QMessageBox_STYLE = "\
+QMessageBox {\
+    background: rgb(32, 55, 76);\
+}\
+\
+QLabel {\
+    color: rgb(255, 255, 255);\
+margin: 20px;\
+}\
+\
+QPushButton {\
+    border: none;\
+padding: 10px;\
+margin: 20px 5px;\
+border-radius: 5px;\
+background: rgb(49, 87, 113);\
+color: rgb(255, 255, 255);\
+}\
+\
+QPushButton:hover {\
+    background: rgb(53, 71, 104);\
+}\
+"
 
 
 def delete_button_from_list(note_id, buttons_list: List[QPushButton]):
@@ -60,6 +97,7 @@ class MainWidget(QWidget):
         self.setWindowState(Qt.WindowMaximized)
 
         self.empty_edit_area = QWidget()
+        self.empty_edit_area.id = -1
 
         self.db = DataBase()
 
@@ -186,10 +224,10 @@ class MainWidget(QWidget):
         self.ui.edit_area.setCurrentWidget(note_widget)
 
         for button in self.notes_buttons_list:
-            button.setStyleSheet(open("./styles/note_button.css").read() + "}")
+            button.setStyleSheet(NOTE_BUTTON_STYLE + "}")
 
-        note_button.setStyleSheet(open("./styles/note_button.css").read() + "\n background: rgb(3, 74, 89);\n"
-                                                                            "border: 1px solid rgb(255, 255, 255);}")
+        note_button.setStyleSheet(NOTE_BUTTON_STYLE + "\n background: rgb(3, 74, 89);\n"
+                                                      "border: 1px solid rgb(255, 255, 255);}")
 
     def hide_menu(self):
         if self.ui.scroll_notes_list_area.isHidden():
@@ -201,7 +239,7 @@ class MainWidget(QWidget):
         yes_no_dialog = QMessageBox(QMessageBox.Information, "Удалить",
                                     "Вы действительно хотите удалить эту заметку?",
                                     QMessageBox.Yes | QMessageBox.No)
-        yes_no_dialog.setStyleSheet(open("./styles/QMessageBox.css").read())
+        yes_no_dialog.setStyleSheet(QMessageBox_STYLE)
         yes_no_dialog.setIcon(QMessageBox.NoIcon)
 
         note_id = self.ui.edit_area.currentWidget().id
