@@ -167,7 +167,11 @@ class MainWidget(QWidget):
     def take_next_id(self):
         request = """SELECT MAX(id) FROM Notes"""
         response = self.db.cursor.execute(request).fetchone()
-        return response[0] + 1
+        if not response[0]:
+            cur_id = 0
+        else:
+            cur_id = response[0]
+        return cur_id + 1
 
     def search_some_notes(self):
         request = """SELECT * FROM Notes WHERE header like '{}%' AND  state = {}""" \
